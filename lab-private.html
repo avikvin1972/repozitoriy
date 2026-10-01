@@ -3,7 +3,7 @@
 <style>
 :root{--bg:#f6f8f9;--fg:#15232b;--mut:#56666e;--card:#fff;--line:#c9d5da;--acc:#1c5f8a;--btnfg:#fff;--ref:#d85a30}
 @media(prefers-color-scheme:dark){:root{--bg:#0f1a20;--fg:#e6eef1;--mut:#9fb0b8;--card:#17262d;--line:#2b3d46;--acc:#7cc0ea;--btnfg:#0f1a20;--ref:#ff9a6b}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,sans-serif}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,sans-serif}
 main{max-width:640px;margin:0 auto;padding:16px 14px 40px}h1{font-size:1.3rem;margin:0 0 10px}h2{font-size:1rem;margin:18px 0 6px}
 button,select,input[type=file]{font:inherit;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);margin:4px 6px 4px 0}
 button.p{background:var(--acc);color:var(--btnfg);border:0;font-weight:600}button.on{outline:3px solid var(--acc)}
@@ -34,7 +34,7 @@ const $=id=>document.getElementById(id),AC=window.AudioContext||window.webkitAud
 let ctx,S=null,R=null,tab=0,cmp=false,rec=null,chunks=[],tm,dt;
 const SND='i ɪ ɛ æ ɑ ɔ ʊ u ʌ ə ɝ ɚ ɨ eɪ aɪ ɔɪ oʊ aʊ ɪr ɛr ɑr ɔr oʊr ʊr p b t d k g tʃ dʒ f v θ ð s z ʃ ʒ h m n ŋ l r j w ʍ x'.split(' ').concat(['слово A','слово B','слово C']);
 $('sel').innerHTML=SND.map(s=>'<option>'+s+'</option>').join('');
-['Форма','Спектр','Спектрограмма','Тон','Громкость'].forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;if(!i)b.className='on';b.onclick=()=>{tab=i;[...$('tabs').children].forEach((c,j)=>c.classList.toggle('on',j==i));$('lc').hidden=i!=1;draw()};$('tabs').appendChild(b)});$('lc').hidden=true;
+['Форма','Спектр','Спектрограмма','Тон','Громкость'].forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;if(!i)b.className='on';b.onclick=()=>{tab=i;[...$('tabs').children].forEach((c,j)=>c.classList.toggle('on',j==i));$('lc').hidden=i!=1;if(S)drawWave();draw()};$('tabs').appendChild(b)});$('lc').hidden=true;
 $('smic').onclick=()=>{$('pm').hidden=false;$('pf').hidden=true;$('smic').className='on';$('sfile').className=''};
 $('sfile').onclick=()=>{$('pm').hidden=true;$('pf').hidden=false;$('sfile').className='on';$('smic').className=''};
 const db=()=>new Promise((ok,no)=>{const q=indexedDB.open('pl_lab',1);q.onupgradeneeded=()=>q.result.createObjectStore('ref');q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});
@@ -55,7 +55,7 @@ const semi=a=>{const v=a.filter(u=>u).sort((p,q)=>p-q),md=v[Math.floor(v.length/
 function loud(x){const N=512,H=Math.max(128,Math.floor((x.length-N)/150)),o=[];for(let s=0;s+N<=x.length;s+=H){let e=0;for(let i=0;i<N;i++)e+=x[s+i]*x[s+i];o.push(10*Math.log10(e/N+1e-10))}const mx=Math.max(...o);return o.map(v=>v-mx)}
 function plot(g,W,H,v,y0,y1,col,lw,al){g.strokeStyle=col;g.lineWidth=lw;g.globalAlpha=al;g.beginPath();let up=false;const n=Math.max(1,v.length-1);for(let i=0;i<v.length;i++){const u=v[i];if(u==null||u!==u){up=false;continue}const X=i/n*W,Y=H-(u-y0)/(y1-y0)*H;up?g.lineTo(X,Y):g.moveTo(X,Y);up=true}g.stroke();g.globalAlpha=1}
 function bars(g,x,W,y,h,col,a){let mx=1e-9;for(let i=0;i<x.length;i+=3)mx=Math.max(mx,Math.abs(x[i]));g.fillStyle=col;g.globalAlpha=a;const k=x.length/W;for(let i=0;i<W;i+=2){let lo=1,hi=-1;for(let j=Math.floor(i*k),e=Math.min(x.length,Math.floor((i+2)*k));j<e;j++){const v=x[j]/mx;if(v<lo)lo=v;if(v>hi)hi=v}if(hi<lo)continue;g.fillRect(i,y+h/2*(1-hi),2,Math.max(1,h/2*(hi-lo)))}g.globalAlpha=1}
-function drawWave(){const cv=$('cw'),g=cv.getContext('2d'),W=cv.width,H=cv.height;g.clearRect(0,0,W,H);bars(g,S.d,W,0,H,css('--acc'),.9);const A=+$('ra').value/100,B=Math.max(+$('rb').value/100,A+.01);g.fillStyle=css('--ref');g.globalAlpha=.25;g.fillRect(A*W,0,(B-A)*W,H);g.globalAlpha=1}
+function drawWave(){const cv=$('cw'),g=cv.getContext('2d'),W=cv.width,H=cv.height;g.clearRect(0,0,W,H);bars(g,S.d,W,0,H,css('--acc'),.9);const A=+$('ra').value/100,B=Math.max(+$('rb').value/100,A+.01);g.fillStyle=css('--ref');g.globalAlpha=.25;g.fillRect(A*W,0,(B-A)*W,H);g.globalAlpha=1;if(tab==1){const n=S.d.length,a0=Math.floor(n*A),fl=Math.floor(n*Math.min(B,1))-a0,c=a0+Math.max(0,Math.floor((fl-2048)*$('rc').value/100))+1024;g.fillStyle=css('--fg');g.fillRect(c/n*W-1,0,3,H)}}
 function draw(){if(!S)return;const cv=$('cg'),g=cv.getContext('2d'),W=cv.width,H=cv.height,x=seg(),C=css('--acc'),Q=css('--ref'),fg=css('--fg'),r=cmp&&R&&R.d.length>600?R:null,p=$('rc').value/100;let info='';g.clearRect(0,0,W,H);g.font='22px system-ui';g.fillStyle=fg;
 if(x.length<600){g.fillText('Фрагмент слишком короткий',20,40);return}
 if(tab==0){bars(g,x,W,0,H,C,.9);if(r)bars(g,r.d,W,0,H,Q,.45);info=r?'Синий: сейчас. Оранжевый: эталон (растянут по длине).':''}
